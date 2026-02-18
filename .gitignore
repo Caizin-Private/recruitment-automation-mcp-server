@@ -1,6 +1,3 @@
-# dependencies
-node_modules/
-
 # environment variables (IMPORTANT - contains secrets)
 .env
 .env.*
@@ -9,14 +6,28 @@ node_modules/
 # logs
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # build output
 dist/
 build/
 out/
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Java / JVM
+*.class
+*.jar
+*.war
+*.ear
+target/
+
+# IDE and editor
+.classpath
+.project
+.settings/
+*.iml
 
 # coverage
 coverage/
