@@ -13,6 +13,10 @@ import java.util.List;
 @Builder
 public class ResumeAnalysisResult {
 
+
+    private String jobId;
+    private String candidateId;
+
     private Integer technical_score;
     private Integer experience_score;
     private Integer communication_score;

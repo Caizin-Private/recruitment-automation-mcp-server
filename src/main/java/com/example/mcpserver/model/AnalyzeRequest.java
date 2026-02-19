@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 public class AnalyzeRequest {
 
     private String resumeText;
+
     private String jobDescription;
 
+    private String jobId;
+
+    private String candidateId;
 }

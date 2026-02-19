@@ -21,49 +21,65 @@ public class OpenAIClientService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public String getResponseText(String prompt) throws Exception {
+
         if (apiKey == null || apiKey.isEmpty()) {
-            throw new IllegalStateException("OpenAI API key not configured (openai.api.key)");
+            throw new IllegalStateException("OpenAI API key not configured");
         }
 
         HttpClient client = HttpClient.newHttpClient();
 
         Map<String, Object> body = new HashMap<>();
-        body.put("model", "gpt-4.1");
+
+        body.put("model", "gpt-4o-mini");
+
         body.put("input", prompt);
+
         body.put("temperature", 0);
 
-        String requestBody = mapper.writeValueAsString(body);
+        body.put("text", Map.of(
+                "format", Map.of(
+                        "type", "json_object"
+                )
+        ));
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.openai.com/v1/responses"))
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build();
+        String requestBody =
+                mapper.writeValueAsString(body);
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create("https://api.openai.com/v1/responses"))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer " + apiKey)
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                        .build();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() / 100 != 2) {
-            throw new RuntimeException("OpenAI API returned status " + response.statusCode() + ": " + response.body());
+
+            throw new RuntimeException(
+                    "OpenAI API error: " +
+                            response.statusCode() +
+                            " " +
+                            response.body()
+            );
         }
 
-        JsonNode root = mapper.readTree(response.body());
+        JsonNode root =
+                mapper.readTree(response.body());
 
-        JsonNode outputNode = root.path("output");
-        if (!outputNode.isArray() || outputNode.size() == 0) {
-            throw new RuntimeException("Unexpected OpenAI response format: missing output");
+        JsonNode contentArray =
+                root.path("output").get(0).path("content");
+
+        for (JsonNode content : contentArray) {
+
+            if ("output_text".equals(content.path("type").asText())) {
+
+                return content.path("text").asText();
+            }
         }
 
-        JsonNode contentNode = outputNode.get(0).path("content");
-        if (!contentNode.isArray() || contentNode.size() == 0) {
-            throw new RuntimeException("Unexpected OpenAI response format: missing content");
-        }
-
-        String text = contentNode.get(0).path("text").asText(null);
-        if (text == null) {
-            throw new RuntimeException("Unexpected OpenAI response format: missing text");
-        }
-
-        return text;
+        throw new RuntimeException("No output_text found in OpenAI response");
     }
 }
