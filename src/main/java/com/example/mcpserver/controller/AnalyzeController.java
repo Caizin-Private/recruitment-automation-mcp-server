@@ -32,11 +32,20 @@ public class AnalyzeController {
             System.out.println("ResumeText received: " + (request.getResumeText() != null));
             System.out.println("JobDescription received: " + (request.getJobDescription() != null));
 
+            // NEW logs
+            System.out.println("JobId: " + request.getJobId());
+            System.out.println("CandidateId: " + request.getCandidateId());
+
             ResumeAnalysisResult result =
                     analyzerService.analyze(
                             request.getResumeText(),
-                            request.getJobDescription()
+                            request.getJobDescription(),
+                            request.getJobId(),
+                            request.getCandidateId()
                     );
+
+            result.setJobId(request.getJobId());
+            result.setCandidateId(request.getCandidateId());
 
             return ResponseEntity.ok(result);
 

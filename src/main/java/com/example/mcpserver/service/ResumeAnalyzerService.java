@@ -18,7 +18,12 @@ public class ResumeAnalyzerService {
         this.mapper = mapper;
     }
 
-    public ResumeAnalysisResult analyze(String resumeText, String jobDescription) throws Exception {
+    public ResumeAnalysisResult analyze(
+            String resumeText,
+            String jobDescription,
+            String jobId,
+            String candidateId
+    ) throws Exception {
 
         if (resumeText == null || jobDescription == null) {
             throw new IllegalArgumentException("ResumeText or JobDescription is null");
@@ -47,7 +52,8 @@ Resume:
 Job Description:
 """ + jobDescription;
 
-        String responseText = openAIClientService.getResponseText(prompt);
+        String responseText =
+                openAIClientService.getResponseText(prompt);
 
         if (responseText == null || responseText.isEmpty()) {
             throw new RuntimeException("Empty response from OpenAI");
@@ -55,7 +61,14 @@ Job Description:
 
         responseText = cleanJson(responseText);
 
-        return mapper.readValue(responseText, ResumeAnalysisResult.class);
+        ResumeAnalysisResult result =
+                mapper.readValue(responseText, ResumeAnalysisResult.class);
+
+        // IMPORTANT: set identifiers here
+        result.setJobId(jobId);
+        result.setCandidateId(candidateId);
+
+        return result;
     }
 
     private String cleanJson(String text) {
@@ -68,7 +81,6 @@ Job Description:
                     .trim();
         }
 
-        // Extract JSON block safely
         int start = text.indexOf("{");
         int end = text.lastIndexOf("}");
 
